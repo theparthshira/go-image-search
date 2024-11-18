@@ -12,5 +12,7 @@ func InitRoutes(app *fiber.App) error {
 
 	app.Delete("/:imageName", controllers.HandleDeleteImage)
 
+	app.Get("/images",controllers.GetImagesList)
+
 	return nil
 }

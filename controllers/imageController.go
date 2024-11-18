@@ -59,3 +59,21 @@ func HandleDeleteImage(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"status": 201, "message": "Image deleted successfully", "data": nil})
 }
+
+func GetImagesList(c *fiber.Ctx) error {
+	path := "D:\\live\\go-image-search\\images"
+	dir, err := os.ReadDir(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var files []string
+
+	for _, file := range dir {
+		files = append(files, file.Name())
+	}
+
+	fmt.Println(files)
+
+	return c.JSON(fiber.Map{"status": 201, "message": "Images listed successfully", "data": files})
+}
