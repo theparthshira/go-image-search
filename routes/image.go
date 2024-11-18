@@ -8,11 +8,13 @@ import (
 func InitRoutes(app *fiber.App) error {
 	app.Static("images", "./images")
 
-	app.Post("/", controllers.HandleFileupload)
+	app.Get("/", controllers.HealthCheck)
+
+	app.Post("/upload", controllers.HandleFileupload)
 
 	app.Delete("/:imageName", controllers.HandleDeleteImage)
 
-	app.Get("/images",controllers.GetImagesList)
+	app.Get("/images", controllers.GetImagesList)
 
 	return nil
 }

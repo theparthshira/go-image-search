@@ -10,6 +10,10 @@ import (
 	"github.com/google/uuid"
 )
 
+func HealthCheck(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{"status": 200, "message": "Server is running 🚀🚀"})
+}
+
 func HandleFileupload(c *fiber.Ctx) error {
 
 	file, err := c.FormFile("image")
