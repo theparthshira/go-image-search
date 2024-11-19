@@ -27,15 +27,6 @@ Start the server
   go run main.go
 ```
 
-
-## Running Tests
-
-To run tests, run the following command
-
-```bash
-  npm run test
-```
-
 ## Tasks
 
 - [x]  Create Go service
