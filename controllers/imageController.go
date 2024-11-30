@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
+	"github.com/theparthshira/go-image-search/utils"
 )
 
 func HealthCheck(c *fiber.Ctx) error {
@@ -15,6 +14,7 @@ func HealthCheck(c *fiber.Ctx) error {
 }
 
 func HandleFileupload(c *fiber.Ctx) error {
+	fmt.Println("uploading...")
 
 	file, err := c.FormFile("image")
 
@@ -24,32 +24,34 @@ func HandleFileupload(c *fiber.Ctx) error {
 
 	}
 
-	uniqueId := uuid.New()
-
-	filename := strings.Replace(uniqueId.String(), "-", "", -1)
-
-	fileExt := strings.Split(file.Filename, ".")[1]
-
-	image := fmt.Sprintf("%s.%s", filename, fileExt)
-
-	err = c.SaveFile(file, fmt.Sprintf("./images/%s", image))
+	token, err := utils.GetB2AuthToken()
 
 	if err != nil {
-		log.Println("image save error --> ", err)
+		log.Println("image upload error --> ", err)
 		return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
 	}
 
-	imageUrl := fmt.Sprintf("http://localhost:4000/images/%s", image)
+	fmt.Println("token: ", token)
 
-	data := map[string]interface{}{
+	uploadURL, err := utils.GetB2UploadURL(token)
 
-		"imageName": image,
-		"imageUrl":  imageUrl,
-		"header":    file.Header,
-		"size":      file.Size,
+	if err != nil {
+		log.Println("image upload error --> ", err)
+		return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
 	}
 
-	return c.JSON(fiber.Map{"status": 201, "message": "Image uploaded successfully", "data": data})
+	fmt.Println("uploadURL: ", uploadURL)
+
+	fileURL, err := utils.UploadB2File(file, uploadURL)
+
+	if err != nil {
+		log.Println("image upload error --> ", err)
+		return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
+	}
+
+	fmt.Println("fileURL: ", fileURL)
+
+	return c.JSON(fiber.Map{"status": 201, "message": "Image uploaded successfully", "data": fileURL})
 }
 
 func HandleDeleteImage(c *fiber.Ctx) error {

@@ -30,8 +30,8 @@ Start the server
 ## Tasks
 
 - [x]  Create Go service
-- [ ]  Add photos to s3 or other providers
-- [ ]  Extract text from images
+- [x]  Add photos to s3 or other providers
+- [x]  Extract text from images
 - [ ]  Identify image visuals
 - [ ]  Create job for image tasks using kafka
 - [ ]  Add elasticsearch and ingress this data for images
