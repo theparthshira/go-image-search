@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/theparthshira/go-image-search/utils"
+	"github.com/google/uuid"
+	"github.com/theparthshira/go-image-search/kafka"
 )
 
 func HealthCheck(c *fiber.Ctx) error {
@@ -14,7 +16,46 @@ func HealthCheck(c *fiber.Ctx) error {
 }
 
 func HandleFileupload(c *fiber.Ctx) error {
-	fmt.Println("uploading...")
+	// fmt.Println("uploading...")
+
+	// file, err := c.FormFile("image")
+
+	// if err != nil {
+	// 	log.Println("image upload error --> ", err)
+	// 	return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
+
+	// }
+
+	// token, err := utils.GetB2AuthToken()
+
+	// if err != nil {
+	// 	log.Println("image upload error --> ", err)
+	// 	return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
+	// }
+
+	// fmt.Println("token: ", token)
+
+	// uploadURL, err := utils.GetB2UploadURL(token)
+
+	// if err != nil {
+	// 	log.Println("image upload error --> ", err)
+	// 	return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
+	// }
+
+	// fmt.Println("uploadURL: ", uploadURL)
+
+	// fileURL, err := utils.UploadB2File(file, uploadURL)
+
+	// if err != nil {
+	// 	log.Println("image upload error --> ", err)
+	// 	return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
+	// }
+
+	// fmt.Println("fileURL: ", fileURL)
+
+	// kafka.PushCommentToQueue("comments", []byte(fileURL))
+
+	// return c.JSON(fiber.Map{"status": 201, "message": "Image uploaded successfully", "data": fileURL})
 
 	file, err := c.FormFile("image")
 
@@ -24,34 +65,35 @@ func HandleFileupload(c *fiber.Ctx) error {
 
 	}
 
-	token, err := utils.GetB2AuthToken()
+	uniqueId := uuid.New()
+
+	filename := strings.Replace(uniqueId.String(), "-", "", -1)
+
+	fileExt := strings.Split(file.Filename, ".")[1]
+
+	image := fmt.Sprintf("%s.%s", filename, fileExt)
+
+	err = c.SaveFile(file, fmt.Sprintf("./images/%s", image))
 
 	if err != nil {
-		log.Println("image upload error --> ", err)
+		log.Println("image save error --> ", err)
 		return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
 	}
 
-	fmt.Println("token: ", token)
+	imageUrl := fmt.Sprintf("http://localhost:4000/images/%s", image)
 
-	uploadURL, err := utils.GetB2UploadURL(token)
+	data := map[string]interface{}{
 
-	if err != nil {
-		log.Println("image upload error --> ", err)
-		return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
+		"imageName": image,
+		"imageUrl":  imageUrl,
+		"header":    file.Header,
+		"size":      file.Size,
 	}
 
-	fmt.Println("uploadURL: ", uploadURL)
+	kafka.PushCommentToQueue("comments", []byte(imageUrl))
 
-	fileURL, err := utils.UploadB2File(file, uploadURL)
+	return c.JSON(fiber.Map{"status": 201, "message": "Image uploaded successfully", "data": data})
 
-	if err != nil {
-		log.Println("image upload error --> ", err)
-		return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
-	}
-
-	fmt.Println("fileURL: ", fileURL)
-
-	return c.JSON(fiber.Map{"status": 201, "message": "Image uploaded successfully", "data": fileURL})
 }
 
 func HandleDeleteImage(c *fiber.Ctx) error {
