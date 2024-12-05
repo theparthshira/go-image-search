@@ -1,11 +1,6 @@
-
 # Go Image Search
 
 a go app that can ingress a library of photos and search images from their visual description
-
-
-
-
 
 ## Run Locally
 
@@ -29,11 +24,11 @@ Start the server
 
 ## Tasks
 
-- [x]  Create Go service
-- [x]  Add photos to s3 or other providers
-- [x]  Extract text from images
-- [ ]  Identify image visuals
-- [ ]  Create job for image tasks using kafka
-- [ ]  Add elasticsearch and ingress this data for images
-- [ ]  Connect all?
-- [ ]  Create webapp for UI/UX
+- [x] Create Go service
+- [x] Add photos to s3 or other providers
+- [x] Extract text from images
+- [ ] Identify image visuals
+- [x] Create job for image tasks using kafka
+- [x] Add elasticsearch and ingress this data for images
+- [x] Connect all?
+- [ ] Create webapp for UI/UX
