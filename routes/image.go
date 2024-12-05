@@ -16,5 +16,7 @@ func InitRoutes(app *fiber.App) error {
 
 	app.Get("/images", controllers.GetImagesList)
 
+	app.Get("/query", controllers.GetSearchQuery)
+
 	return nil
 }

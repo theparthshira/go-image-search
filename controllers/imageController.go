@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/theparthshira/go-image-search/elasticsearch"
 	"github.com/theparthshira/go-image-search/kafka"
 )
 
@@ -90,7 +91,7 @@ func HandleFileupload(c *fiber.Ctx) error {
 		"size":      file.Size,
 	}
 
-	kafka.PushCommentToQueue("comments", []byte(imageUrl))
+	kafka.PushCommentToQueue("comments", []byte(image))
 
 	return c.JSON(fiber.Map{"status": 201, "message": "Image uploaded successfully", "data": data})
 
@@ -124,4 +125,19 @@ func GetImagesList(c *fiber.Ctx) error {
 	fmt.Println(files)
 
 	return c.JSON(fiber.Map{"status": 201, "message": "Images listed successfully", "data": files})
+}
+
+func GetSearchQuery(c *fiber.Ctx) error {
+	queries := c.Queries()
+
+	client, _ := elasticsearch.ConnectElasticSearch()
+	searchResult := elasticsearch.QueryElasticData(client, queries["search"])
+
+	searchUrl := []string{}
+
+	for _, id := range searchResult {
+		searchUrl = append(searchUrl, fmt.Sprintf("http://localhost:4000/images/%s", id.Id))
+	}
+
+	return c.JSON(fiber.Map{"status": 201, "message": "Images listed successfully", "data": searchUrl})
 }

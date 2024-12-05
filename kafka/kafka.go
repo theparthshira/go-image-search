@@ -2,8 +2,11 @@ package kafka
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Shopify/sarama"
+	"github.com/olivere/elastic/v7"
+	"github.com/theparthshira/go-image-search/elasticsearch"
 )
 
 func ConnectProducer(brokersUrl []string) (sarama.SyncProducer, error) {
@@ -34,4 +37,52 @@ func PushCommentToQueue(topic string, message []byte) error {
 	}
 
 	return nil
+}
+
+func ConsumeImageTagData(client *elastic.Client) {
+	brokers := []string{"localhost:9092"}
+	topic := "imagetags"
+
+	consumer, err := sarama.NewConsumer(brokers, nil)
+	if err != nil {
+		fmt.Println("Failed to start consumer: ", err)
+	}
+	defer consumer.Close()
+
+	partitions, err := consumer.Partitions(topic)
+	if err != nil {
+		fmt.Println("Failed to get partitions: ", err)
+	}
+
+	fmt.Println("Consuming...")
+
+	for _, partition := range partitions {
+		partitionConsumer, err := consumer.ConsumePartition(topic, partition, sarama.OffsetNewest)
+		if err != nil {
+			fmt.Printf("Failed to start consuming partition %d: %v", partition, err)
+		}
+		defer partitionConsumer.Close()
+
+		go func(pc sarama.PartitionConsumer) {
+			for msg := range pc.Messages() {
+				fmt.Printf("Partition: %d, Offset: %d, Key: %s, Value: %s\n",
+					msg.Partition, msg.Offset, string(msg.Key), string(msg.Value))
+
+				str := string(msg.Value)
+				trimmedStr := strings.Trim(str, "[]")
+
+				tagArr := strings.Split(trimmedStr, ", ")
+
+				for _, tag := range tagArr {
+					elasticsearch.IndexElasticData(client, elasticsearch.PhotoTag{
+						Tag: tag,
+						Id:  string(msg.Key),
+					})
+				}
+
+			}
+		}(partitionConsumer)
+	}
+
+	select {}
 }

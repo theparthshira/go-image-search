@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/theparthshira/go-image-search/elasticsearch"
+	"github.com/theparthshira/go-image-search/kafka"
 	"github.com/theparthshira/go-image-search/routes"
 )
 
@@ -17,16 +18,17 @@ func main() {
 
 	routes.InitRoutes(app)
 
-	client, _ := elasticsearch.ConnectElasticSearch()
+	go func() {
+		client, err := elasticsearch.ConnectElasticSearch()
 
-	data := elasticsearch.PhotoTag{
-		Tag: "123",
-		Id:  "999",
-	}
+		if err != nil {
+			fmt.Println("issue running elasticsearch")
+			return
+		}
 
-	elasticsearch.IndexElasticData(client, data)
-
-	fmt.Println("test", elasticsearch.QueryElasticData(client, "123"))
+		fmt.Println("Starting Kafka consumer...")
+		kafka.ConsumeImageTagData(client)
+	}()
 
 	log.Fatal(app.Listen(":4000"))
 }

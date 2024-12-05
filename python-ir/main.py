@@ -1,9 +1,7 @@
-from confluent_kafka import Consumer, KafkaException
+from confluent_kafka import Consumer, Producer
 import easyocr
 import requests
 from base64 import b64encode
-from PIL import Image
-import io
 
 def basic_auth(username, password):
     token = b64encode(f"{username}:{password}".encode('utf-8')).decode("ascii")
@@ -25,12 +23,17 @@ def image_ocr(image):
     print("found image", image)
     # image_show = Image.open(io.BytesIO(image))
     # image_show.show()
+    image_url = f"http://localhost:4000/images/{image}"
     
     reader = easyocr.Reader(['en'])
-    text_result = reader.readtext(image)
+    text_result = reader.readtext(image_url)
+    
+    tag_array = []
 
     for text in text_result:
-        print("result", type(text), text[1], '\n')
+        tag_array.append(text[1])
+
+    return tag_array
 
 
 def main():
@@ -55,6 +58,11 @@ def main():
             else:
                 # file_name = get_image(msg.value().decode('utf-8'))
                 image_text = image_ocr(msg.value().decode('utf-8'))
+                producer = Producer({
+                    'bootstrap.servers': 'localhost:9092',
+                })
+                producer.produce(topic="imagetags", key=msg.value().decode('utf-8'), value=str(image_text).encode('utf-8'))
+
     except KeyboardInterrupt:
         pass
     finally:
