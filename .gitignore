@@ -25,5 +25,22 @@ go.work.sum
 # env file
 .env
 
-# next client
-client/node_modules/
+# next client/
+client/node_modules
+client/.pnp
+client/.pnp.*
+client/.yarn/*
+client/!.yarn/patches
+client/!.yarn/plugins
+client/!.yarn/releases
+client/!.yarn/versions
+
+# testing
+client/coverage
+
+# next.js
+client/.next/
+client/out/
+
+# production
+client/build
